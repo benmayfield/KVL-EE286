@@ -23,7 +23,7 @@ SoftwareSerial mySerial(2, 3); // pin #2 is RX, #3 is TX
 
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&mySerial);
 
-// 🟢 Add these missing declarations:
+// Add these missing declarations:
 String storedNames[20] = {"Joey"};  // you can add more names later if needed
 uint8_t nameCount = 1;              // currently we have 1 stored name
 
