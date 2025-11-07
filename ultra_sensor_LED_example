@@ -1,63 +1,58 @@
-// Ultrasonic + LED Setup for 4 Sensors
-// Generated, no alterations
-
-// Define trig, echo, and LED pins for each sensor
-const int trigPins[4] = {2, 4, 6, 12};
-const int echoPins[4] = {3, 5, 7, 13};
-const int ledPins[4]  = {8, 9, 10, 11};
-
-// Define distance threshold (in cm)
-const int threshold = 5;
-
-// Function to measure distance for a given sensor
-float measureDistance(int trigPin, int echoPin) {
-  // Send a 10 µs pulse to trigger
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  // Measure the time for the echo to return
-  long duration = pulseIn(echoPin, HIGH, 30000); // timeout after 30 ms
-
-  // Calculate distance in cm (speed of sound = 34300 cm/s)
-  float distance = duration * 0.0343 / 2;
-  return distance;
-}
+// define pins for ultrasonic sensors and LEDsTRIG4, 6, 8
+const int trigPins[4] = {2, 4, 6, 8};   // Trig pins for each sensor
+const int echoPins[4] = {3, 5, 7, 9};   // Echo pins for each sensor
+const int buzzerPin = 10; // active buzzer pin
 
 void setup() {
   Serial.begin(9600);
 
-  // Initialize all trig, echo, and LED pins
+  // Initialize pins
+  pinMode(buzzerPin, OUTPUT);
+
   for (int i = 0; i < 4; i++) {
     pinMode(trigPins[i], OUTPUT);
     pinMode(echoPins[i], INPUT);
-    pinMode(ledPins[i], OUTPUT);
   }
 
-  Serial.println("4-Sensor Ultrasonic Distance Monitor Initialized");
+  Serial.println("4-Pin Ultrasonic Sensor System Ready!");
+}
+
+// Function to read distance (cm) from a 4-pin ultrasonic sensor
+long readDistanceCM(int trigPin, int echoPin) {
+  // Step 1: Trigger the ultrasonic pulse
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);  // typical trigger pulse width
+  digitalWrite(trigPin, LOW);
+
+  // Step 2: Measure echo pulse duration
+  long duration = pulseIn(echoPin, HIGH, 30000);  // timeout = 30 ms
+
+  // Step 3: Convert time (µs) to distance (cm)
+  long distance = duration / 58.0;
+
+  return distance;
 }
 
 void loop() {
-  // Loop through all 4 sensors
   for (int i = 0; i < 4; i++) {
-    float distance = measureDistance(trigPins[i], echoPins[i]);
+    long distance = readDistanceCM(trigPins[i], echoPins[i]);
 
-    // Display the distance in Serial Monitor
     Serial.print("Sensor ");
     Serial.print(i + 1);
     Serial.print(": ");
     Serial.print(distance);
     Serial.println(" cm");
-
-    // LED control logic
-    if (distance <= threshold && distance > 0) {
-      digitalWrite(ledPins[i], HIGH);  // Object within 5 cm
-    } else {
-      digitalWrite(ledPins[i], LOW);   // Too far or no reading
+    
+    // change freq of buzzer based on 
+    int toneFreq = map(distance, 5, 100, 2000, 200); // frequency (Hz)
+    // Turn buzzer ON if within 50 cm
+    if (distance > 0 && distance <= 50) {
+      tone(buzzerPin, toneFreq, 100);
+      //delay(100);
     }
   }
 
-  delay(200); // Update every 0.2 seconds
+  //delay(100); // small delay before next round
 }
